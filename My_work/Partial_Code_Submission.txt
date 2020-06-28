@@ -1,0 +1,115 @@
+Sub stock_data():
+    ' Run through each worksheet
+    For Each ws In Worksheets
+        'Turn off screen updating
+        Application.ScreenUpdating = False
+        
+        'Format analysis location
+        ws.Range("I1") = "Ticker"
+        ws.Range("J1") = "Yearly Change"
+        ws.Range("K1") = "Percent Change"
+        ws.Range("L1") = "Total Stock Volume"
+        
+        'Determine last row of worksheet
+        lastrow = ws.Cells(Rows.count, "A").End(xlUp).Row
+        
+        'Define veriables and arrays
+        Dim ticker As String 'for refering to current ticker row
+        'Dim ticker() As String 'for storing each ticker encountered
+        Dim change As Double 'for temporarily storing Yearly Change
+        'Dim vol() As String
+        Dim start As Double 'first open price
+        Dim final As Double 'final close price
+        Dim ticks As Integer 'for counting ticker
+        
+        'run for loop through all rows
+        ticks = 1
+        For Row = 2 To lastrow
+            ticker = ws.Cells(Row, 1)
+            If ticker = ws.Cells(Row - 1, 1) Then
+                ws.Cells(ticks, 12) = ws.Cells(ticks, 12) + ws.Cells(Row, 7)
+                final = ws.Cells(Row, 6)
+                change = final - start
+                ws.Cells(ticks, 10) = change
+                If start = 0 Then
+                
+                Else
+                    ws.Cells(ticks, 11) = change / start
+                End If
+                
+            Else
+                ticks = ticks + 1
+                ws.Cells(ticks, 9) = ticker
+                start = ws.Cells(Row, 3)
+                ws.Cells(ticks, 12) = ws.Cells(Row, 7)
+            End If
+        Next Row
+        
+        
+        'Format the cell colors in Yearly Change. Red for negative and green for positive.
+        'Also format Percent change to be a percentage value
+        lrow = ws.Cells(Rows.count, "J").End(xlUp).Row
+            'Store unformated percent change for use in greatest calculations
+            Dim oldrange As Range
+            Set oldrange = ws.Range("K2:K" & lrow)
+
+        For crow = 2 To lrow
+            ws.Cells(crow, 11) = FormatPercent(ws.Cells(crow, 11))
+            If ws.Cells(crow, 10) < 0 Then
+                ws.Cells(crow, 10).Interior.ColorIndex = 3
+            Else
+                ws.Cells(crow, 10).Interior.ColorIndex = 4
+            End If
+        Next crow
+        
+        'Create and "Greatest" info
+        ws.Range("O1") = "Ticker"
+        ws.Range("P1") = "Value"
+        ws.Range("N2") = "Greatest % Increase"
+        ws.Range("N3") = "Greatest % Decrease"
+        ws.Range("N4") = "Greatest Total Volume"
+        
+        'Now find Greatest % Increase
+            Dim ginc As Double
+            Dim ginc_index As Double
+            'Find max
+            ginc = Application.Max(oldrange)
+            'Find row index of max
+            ginc_index = ws.Range("K2:K" & lrow).Find(FormatPercent(ginc), , xlValues).Row
+            'Fill info cell values
+            ws.Range("O2") = ws.Cells(ginc_index, 9)
+            ws.Range("P2") = FormatPercent(ginc)
+        
+        'Now find Greatest % Decrease
+            Dim gdec As Double
+            Dim gdec_index As Double
+            'Find min
+            gdec = Application.Min(oldrange)
+            'Find row index of min
+            gdec_index = ws.Range("K2:K" & lrow).Find(FormatPercent(gdec), , xlValues).Row
+            'Fill info cell values
+            ws.Range("O3") = ws.Cells(gdec_index, 9)
+            ws.Range("P3") = FormatPercent(gdec)
+            
+        'Now find Greatest Total Stock Volume
+            Dim gvol As Double
+            Dim gvol_index As Double
+            Dim volrange As Range
+            
+            'Find max
+            Set volrange = ws.Range("L2:L" & lrow)
+            gvol = Application.Max(volrange)
+            'Find row index of max
+            gvol_index = ws.Range("L2:L" & lrow).Find(gvol, , xlValues).Row
+            'Fill info cell values
+            ws.Range("O4") = ws.Cells(gvol_index, 9)
+            ws.Range("P4") = gvol
+        'Format size of all info cells
+        ws.Columns("I:P").AutoFit
+        
+        
+    'Exit For
+    'Turn on screen updation to show calculation for ws of worksheets
+    Application.ScreenUpdating = True
+    Next ws
+End Sub

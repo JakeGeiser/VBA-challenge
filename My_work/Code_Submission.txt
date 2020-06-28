@@ -1,0 +1,77 @@
+Sub stock_data():
+    ' Run through each worksheet
+    For Each ws In Worksheets
+        'Turn off screen updating
+        Application.ScreenUpdating = False
+        
+        'Format analysis location
+        ws.Range("I1") = "Ticker"
+        ws.Range("J1") = "Yearly Change"
+        ws.Range("K1") = "Percent Change"
+        ws.Range("L1") = "Total Stock Volume"
+        
+        'Determine last row of worksheet
+        lastrow = ws.Cells(Rows.count, "A").End(xlUp).Row
+        
+        'Define veriables and arrays
+        Dim ticker As String 'for refering to current ticker row
+        'Dim ticker() As String 'for storing each ticker encountered
+        Dim change As Long 'for temporarily storing Yearly Change
+        'Dim vol() As String
+        Dim start As Long 'first open price
+        Dim final As Long 'final close price
+        Dim ticks As Integer 'for counting ticker
+        
+        'run for loop through all rows
+        ticks = 1
+        For Row = 2 To lastrow
+            ticker = ws.Cells(Row, 1)
+            If ticker = ws.Cells(Row - 1, 1) Then
+                ws.Cells(ticks, 12) = ws.Cells(ticks, 12) + ws.Cells(Row, 7)
+                final = ws.Cells(Row, 6)
+                change = final - start
+                ws.Cells(ticks, 10) = change
+                If start = 0 Then
+                
+                Else
+                    ws.Cells(ticks, 11) = change / start
+                End If
+                
+            Else
+                ticks = ticks + 1
+                ws.Cells(ticks, 9) = ticker
+                start = ws.Cells(Row, 3)
+                ws.Cells(ticks, 12) = ws.Cells(Row, 7)
+            End If
+        Next Row
+        
+        
+        'Format the cell colors in Yearly Change. Red for negative and green for positive.
+        'Also format Percent change to be a percentage value
+        lrow = ws.Cells(Rows.count, "J").End(xlUp).Row
+
+        For crow = 2 To lrow
+            ws.Cells(crow, 11) = FormatPercent(ws.Cells(crow, 11))
+            If ws.Cells(crow, 10) < 0 Then
+                ws.Cells(crow, 10).Interior.ColorIndex = 3
+            Else
+                ws.Cells(crow, 10).Interior.ColorIndex = 4
+            End If
+        Next crow
+        
+        'Create and "Greatest" info
+        ws.Range("O1") = "Ticker"
+        ws.Range("P1") = "Value"
+        ws.Range("N2") = "Greatest % Increase"
+        ws.Range("N3") = "Greatest % Decrease"
+        ws.Range("N4") = "Greatest Total Volume"
+        
+
+        ws.Columns("I:P").AutoFit
+        
+        
+    'Exit For
+    'Turn on screen updation to show calculation for ws of worksheets
+    Application.ScreenUpdating = True
+    Next ws
+End Sub
